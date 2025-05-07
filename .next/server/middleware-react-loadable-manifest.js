@@ -1,1 +1,1 @@
-self.__REACT_LOADABLE_MANIFEST="{}"
+self.__REACT_LOADABLE_MANIFEST="{\"portal/[slug].tsx -> @/components/AuditorView\":{\"id\":\"portal/[slug].tsx -> @/components/AuditorView\",\"files\":[\"static/chunks/components_AuditorView_tsx.js\"]},\"portal/[slug].tsx -> @/components/ProveedorView\":{\"id\":\"portal/[slug].tsx -> @/components/ProveedorView\",\"files\":[\"static/chunks/components_ProveedorView_tsx.js\"]},\"portal/[slug].tsx -> @/components/TiendaView\":{\"id\":\"portal/[slug].tsx -> @/components/TiendaView\",\"files\":[\"static/chunks/components_TiendaView_tsx.js\"]}}"
