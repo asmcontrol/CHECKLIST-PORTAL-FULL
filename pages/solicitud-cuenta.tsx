@@ -23,10 +23,15 @@ export default function SolicitudCuenta() {
         estado: 'pendiente',
         fechaSolicitud: Timestamp.now(),
       });
+
+      // Limpiar campos y mostrar mensaje de éxito
+      setTienda('');
+      setEmail('');
+      setRol('tienda');
       setEnviado(true);
     } catch (error) {
       console.error('Error al enviar la solicitud:', error);
-      alert('Ocurrió un error al enviar la solicitud. Intenta nuevamente.');
+      alert('❌ Ocurrió un error al enviar la solicitud. Intenta nuevamente.');
     }
   };
 
@@ -82,10 +87,11 @@ export default function SolicitudCuenta() {
             <option value="auditor">Auditor</option>
           </select>
         </label>
-        <button type="submit" className={styles.button}>Enviar Solicitud</button>
+        <button type="submit" className={styles.button}>
+          Enviar Solicitud
+        </button>
       </form>
     </div>
   );
 }
-
 

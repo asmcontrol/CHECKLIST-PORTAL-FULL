@@ -1,86 +1,144 @@
-// pages/login.tsx
 import { useState } from 'react';
 import { useRouter } from 'next/router';
-import styles from '../styles/login.module.css';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '../firebase/firebaseConfig';
 
 export default function LoginPage() {
   const [tienda, setTienda] = useState('');
-  const [usuario, setUsuario] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState('');
+  const [pass, setPass] = useState('');
   const [rol, setRol] = useState('tienda');
+  const [error, setError] = useState('');
   const router = useRouter();
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!tienda || !email || !pass || !rol) {
+      setError('Completa todos los campos');
+      return;
+    }
 
-    // Simula login exitoso (aquí puedes agregar lógica de autenticación si lo deseas)
-    const ruta = `/portal/${rol}?rol=${rol}&tienda=${tienda}`;
-    router.push(ruta);
+    try {
+      await signInWithEmailAndPassword(auth, email, pass);
+      router.push(`/portal/${tienda}?rol=${rol}`);
+    } catch (err: any) {
+      setError('Correo o contraseña incorrectos');
+    }
   };
 
   return (
-    <div className={styles.container}>
-      <div className={styles.header}>
-        <img src="/asm-logo.png" alt="ASM Control" className={styles.logo} />
-        <h1 className={styles.title}>Inicio de Sesión</h1>
-      </div>
+    <div style={styles.container}>
+      <form onSubmit={handleLogin} style={styles.card}>
+        <img src="/asm-logo.png" alt="Logo ASM" style={styles.logo} />
+        <h2 style={styles.title}>Inicio de Sesión</h2>
 
-      <form onSubmit={handleLogin} className={styles.form}>
-        <label className={styles.label}>
-          Tienda:
-          <input
-            className={styles.input}
-            value={tienda}
-            onChange={(e) => setTienda(e.target.value)}
-            required
-          />
-        </label>
-        <label className={styles.label}>
-          Usuario:
-          <input
-            className={styles.input}
-            type="email"
-            value={usuario}
-            onChange={(e) => setUsuario(e.target.value)}
-            required
-          />
-        </label>
-        <label className={styles.label}>
-          Contraseña:
-          <input
-            className={styles.input}
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-        </label>
-        <label className={styles.label}>
-          Rol:
-          <select
-            className={styles.input}
-            value={rol}
-            onChange={(e) => setRol(e.target.value)}
-          >
-            <option value="Tienda">Tienda</option>
-            <option value="Proveedor">Proveedor</option>
-            <option value="Auditor">Auditor</option>
-          </select>
-        </label>
-        <button type="submit" className={styles.button}>Ingresar</button>
+        <label style={styles.label}>Tienda:</label>
+        <input
+          type="text"
+          value={tienda}
+          onChange={(e) => setTienda(e.target.value)}
+          required
+          style={styles.input}
+        />
+
+        <label style={styles.label}>Usuario:</label>
+        <input
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+          style={styles.input}
+        />
+
+        <label style={styles.label}>Contraseña:</label>
+        <input
+          type="password"
+          value={pass}
+          onChange={(e) => setPass(e.target.value)}
+          required
+          style={styles.input}
+        />
+
+        <label style={styles.label}>Rol:</label>
+        <select
+          value={rol}
+          onChange={(e) => setRol(e.target.value)}
+          required
+          style={styles.input}
+        >
+          <option value="tienda">Tienda</option>
+          <option value="proveedor">Proveedor</option>
+          <option value="auditor">Auditor</option>
+        </select>
+
+        {error && <p style={styles.error}>{error}</p>}
+
+        <button type="submit" style={styles.button}>
+          Ingresar
+        </button>
       </form>
     </div>
   );
 }
 
-
-
-
-
-
-
-
-
-
+const styles: Record<string, React.CSSProperties> = {
+  container: {
+    minHeight: '100vh',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f8f9fa',
+  },
+  card: {
+    backgroundColor: '#fff',
+    padding: '2rem',
+    borderRadius: '10px',
+    width: '100%',
+    maxWidth: '450px',
+    boxShadow: '0 0 10px rgba(0,0,0,0.1)',
+  },
+  logo: {
+    display: 'block',
+    margin: '0 auto 1.5rem',
+    height: '60px',
+  },
+  title: {
+    textAlign: 'center',
+    fontSize: '1.5rem',
+    color: '#2563eb',
+    marginBottom: '1.5rem',
+  },
+  label: {
+    fontWeight: 'bold',
+    marginTop: '1rem',
+    display: 'block',
+    fontSize: '0.95rem',
+  },
+  input: {
+    width: '100%',
+    padding: '0.6rem',
+    marginTop: '0.3rem',
+    marginBottom: '1rem',
+    border: '1px solid #ccc',
+    borderRadius: '5px',
+    fontSize: '1rem',
+  },
+  button: {
+    width: '100%',
+    padding: '0.75rem',
+    backgroundColor: '#2563eb',
+    color: '#fff',
+    border: 'none',
+    borderRadius: '5px',
+    fontWeight: 'bold',
+    cursor: 'pointer',
+  },
+  error: {
+    color: 'red',
+    fontSize: '0.9rem',
+    marginBottom: '1rem',
+    textAlign: 'center',
+  },
+};
 
 

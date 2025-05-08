@@ -1,84 +1,159 @@
-import { useState } from 'react';
-import styles from '../styles/login.module.css';
+import { useEffect, useState } from 'react';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { db } from '../firebase/firebaseConfig';
 
-type Props = {
-  tienda: string;
-};
+export default function TiendaView({ tienda }: { tienda: string }) {
+  const [datos, setDatos] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
-export default function TiendaView({ tienda }: Props) {
-  const [formData, setFormData] = useState<Record<string, string>>({});
+  const docRef = doc(db, 'checklists', tienda);
 
-  const handleChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+  useEffect(() => {
+    const fetchData = async () => {
+      const snapshot = await getDoc(docRef);
+      if (snapshot.exists()) {
+        setDatos(snapshot.data());
+      } else {
+        await setDoc(docRef, { proveedor: {}, tienda: {}, auditor: {} });
+        setDatos({ proveedor: {}, tienda: {}, auditor: {} });
+      }
+      setLoading(false);
+    };
+    fetchData();
+  }, []);
+
+  const handleChange = (id: number, campo: string, valor: string) => {
+    const updated = {
+      ...datos,
+      tienda: {
+        ...datos.tienda,
+        [id]: {
+          ...datos.tienda?.[id],
+          [campo]: valor,
+        },
+      },
+    };
+    setDatos(updated);
+    setDoc(docRef, updated);
   };
 
-  const renderCheckbox = (label: string, field: string) => (
-    <div className={styles.checkboxRow}>
-      <label className={styles.label}>{label}</label>
-      <div className={styles.radioGroup}>
-        <label>
-          <input
-            type="radio"
-            name={field}
-            checked={formData[field] === 'sí'}
-            onChange={() => handleChange(field, 'sí')}
-          /> Sí
-        </label>
-        <label>
-          <input
-            type="radio"
-            name={field}
-            checked={formData[field] === 'no'}
-            onChange={() => handleChange(field, 'no')}
-          /> No
-        </label>
-      </div>
-    </div>
-  );
+  if (loading) return <p>Cargando checklist...</p>;
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log('Checklist tienda enviado:', formData);
-    alert('Checklist guardado correctamente ✅');
+  const renderFila = (
+    id: number,
+    pregunta: string,
+    seccion: 'proveedor' | 'tienda' | 'auditor'
+  ) => {
+    const respuestas = datos?.[seccion]?.[id] || {};
+    const editable = seccion === 'tienda';
+
+    return (
+      <tr key={id}>
+        <td>{id}</td>
+        <td>{pregunta}</td>
+        <td>
+          <input
+            type="radio"
+            name={`p${id}`}
+            checked={respuestas.valor === 'sí'}
+            disabled={!editable}
+            onChange={() => handleChange(id, 'valor', 'sí')}
+          />
+        </td>
+        <td>
+          <input
+            type="radio"
+            name={`p${id}`}
+            checked={respuestas.valor === 'no'}
+            disabled={!editable}
+            onChange={() => handleChange(id, 'valor', 'no')}
+          />
+        </td>
+        <td>
+          <input
+            type="text"
+            value={respuestas.observacion || ''}
+            disabled={!editable}
+            onChange={(e) => handleChange(id, 'observacion', e.target.value)}
+            placeholder="Observación..."
+            style={{ width: '100%' }}
+          />
+        </td>
+      </tr>
+    );
   };
+
+  const secciones = [
+    {
+      titulo: '3. Estado y Organización de la Mercadería',
+      ids: [10, 11, 12, 13, 14],
+      seccion: 'tienda',
+      preguntas: [
+        '¿La mercadería está correctamente etiquetada con código de barras o SKU?',
+        '¿Los productos están organizados por categoría y ubicación (estantes, perchas, góndolas)?',
+        '¿Los artículos fuera de lugar están identificados o separados?',
+        '¿Los productos en bodega están clasificados y ordenados?',
+        '¿Están identificados los productos en mal estado o fuera de sistema?',
+      ],
+    },
+    {
+      titulo: '5. Apoyo y Coordinación con Personal Interno',
+      ids: [21, 22, 23, 24, 25, 26, 27, 28],
+      seccion: 'tienda',
+      preguntas: [
+        '¿Se cuenta con apoyo del personal de tienda para resolver dudas?',
+        '¿Se realizó una reunión previa con el encargado de tienda?',
+        '¿Se informó al personal interno sobre el inventario y su rol?',
+        '¿Está designado un responsable o supervisor de tienda durante el proceso?',
+        '¿Se encuentra definido un punto de contacto entre supervisor de tienda y externo?',
+        '¿Se cuenta con un plan de cierre parcial o total (si aplica) validado?',
+        '¿Se recibió la aprobación del cliente para iniciar el inventario?',
+        '¿Se confirmó el cronograma de inventario?',
+      ],
+    },
+    {
+      titulo: '6. Seguridad y Normativas',
+      ids: [29, 30, 31, 32, 33, 34, 35],
+      seccion: 'tienda',
+      preguntas: [
+        '¿Están disponibles los materiales de seguridad (chalecos, credenciales, etc.)?',
+        '¿Todo el personal externo porta identificación visible (credencial con nombre y RUT/DNI)?',
+        '¿Se registró el ingreso del personal externo (nombre, hora de entrada y salida)?',
+        '¿El personal está informado sobre las normas internas de la tienda?',
+        '¿Se prohíbe manipular productos que no forman parte del conteo sin autorización?',
+        '¿Se restringe el acceso a áreas no habilitadas (cajas, oficinas, vestidores)?',
+        '¿El personal utiliza uniforme, chaleco o distintivo entregado por la empresa?',
+      ],
+    },
+  ];
 
   return (
-    <div className={styles.container}>
-      <div className={styles.formCard}>
-        <h1 className={styles.title}>Checklist Tienda – {tienda}</h1>
-        <form onSubmit={handleSubmit} className={styles.form}>
-          <h2 className={styles.subtitle}>1. Coordinación y Preparación Previa</h2>
-          {renderCheckbox("Fecha y hora de inventario confirmada", "fechaConfirmada")}
-          {renderCheckbox("Equipo interno informado", "equipoInformado")}
-          {renderCheckbox("Condiciones óptimas del local verificadas", "condicionesLocales")}
-          {renderCheckbox("Mapas o planos entregados", "planosEntregados")}
+    <div style={{ padding: '2rem' }}>
+      <h2>Checklist de Verificación para Inventario - Tienda</h2>
 
-          <h2 className={styles.subtitle}>2. Recepción y Control del Personal Externo</h2>
-          {renderCheckbox("Personal externo recibido y verificado", "personalVerificado")}
-          {renderCheckbox("Registro de ingreso completado", "registroIngreso")}
-          {renderCheckbox("Acceso coordinado con supervisor externo", "accesoCoordinado")}
-          {renderCheckbox("Normas internas comunicadas", "normasComunicadas")}
-
-          <h2 className={styles.subtitle}>3. Supervisión Durante la Toma</h2>
-          {renderCheckbox("Participación en inducción de seguridad", "induccionSeguridad")}
-          {renderCheckbox("Disponibilidad para resolver dudas", "disponibilidadDudas")}
-          {renderCheckbox("Supervisión del comportamiento", "supervisionComportamiento")}
-          {renderCheckbox("Cumplimiento del cronograma", "cronogramaCumplido")}
-
-          <h2 className={styles.subtitle}>4. Apoyo Logístico y Técnico</h2>
-          {renderCheckbox("Acceso a recursos facilitado", "recursosFacilitados")}
-          {renderCheckbox("Iluminación y zonas críticas habilitadas", "zonasHabilitadas")}
-          {renderCheckbox("Soporte ante emergencias disponible", "soporteEmergencias")}
-
-          <h2 className={styles.subtitle}>5. Validación y Cierre del Proceso</h2>
-          {renderCheckbox("Revisión de incidencias realizada", "revisionIncidencias")}
-          {renderCheckbox("Acta o informe firmado", "informeFirmado")}
-          {renderCheckbox("Retiro del equipo coordinado", "retiroCoordinado")}
-          {renderCheckbox("Informe enviado a administración central", "informeEnviado")}
-
-          <button type="submit" className={styles.button}>Guardar Checklist</button>
-        </form>
-      </div>
+      {secciones.map((sec) => (
+        <div key={sec.titulo} style={{ marginTop: '2rem' }}>
+          <h3>{sec.titulo}</h3>
+          <table style={{ width: '100%', borderCollapse: 'collapse' }} border={1}>
+            <thead>
+              <tr>
+                <th>N°</th>
+                <th>Pregunta</th>
+                <th>Sí</th>
+                <th>No</th>
+                <th>Observaciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              {sec.ids.map((id, index) =>
+                renderFila(id, sec.preguntas[index], sec.seccion as any)
+              )}
+            </tbody>
+          </table>
+        </div>
+      ))}
     </div>
   );
 }
+
+

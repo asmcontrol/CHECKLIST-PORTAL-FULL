@@ -1,107 +1,61 @@
-// pages/admin.tsx
 import { useEffect, useState } from 'react';
 import { db, auth } from '../firebase/firebaseConfig';
-import {
-  collection,
-  getDocs,
-  updateDoc,
-  doc,
-  DocumentData,
-} from 'firebase/firestore';
-import {
-  createUserWithEmailAndPassword,
-  sendPasswordResetEmail,
-} from 'firebase/auth';
-import styles from '../styles/login.module.css';
+import { collection, getDocs, doc, updateDoc } from 'firebase/firestore';
+import { createUserWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
 
-// ✅ Tipo para solicitudes
-interface Solicitud {
-  id: string;
-  tienda: string;
-  email: string;
-  rol: string;
-  estado: string;
-}
+export default function Admin() {
+  const [solicitudes, setSolicitudes] = useState<any[]>([]);
 
-export default function AdminPanel() {
-  const [solicitudes, setSolicitudes] = useState<Solicitud[]>([]);
+  useEffect(() => {
+    const fetchData = async () => {
+      const snapshot = await getDocs(collection(db, 'solicitudes-cuenta'));
+      const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setSolicitudes(data);
+    };
+    fetchData();
+  }, []);
 
-  const fetchSolicitudes = async () => {
-    const snapshot = await getDocs(collection(db, 'solicitudes-cuenta'));
-    const data: Solicitud[] = snapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...(doc.data() as Omit<Solicitud, 'id'>),
-    }));
-    setSolicitudes(data.filter((s) => s.estado === 'pendiente'));
-  };
-
-  const aceptarSolicitud = async (solicitud: Solicitud) => {
+  const aprobarSolicitud = async (solicitud: any) => {
     try {
-      // ✅ Crear usuario con contraseña temporal
-      await createUserWithEmailAndPassword(auth, solicitud.email, 'temporal123');
+      const email = solicitud.email;
+      const password = 'temporal123'; // contraseña temporal para crear cuenta
 
-      // ✅ Enviar link para cambiar contraseña
-      await sendPasswordResetEmail(auth, solicitud.email);
+      // 1. Crear cuenta
+      await createUserWithEmailAndPassword(auth, email, password);
 
-      // ✅ Actualizar estado en Firestore
+      // 2. Enviar correo para que el usuario cree su contraseña
+      await sendPasswordResetEmail(auth, email);
+
+      // 3. Actualizar estado en Firestore
       await updateDoc(doc(db, 'solicitudes-cuenta', solicitud.id), {
         estado: 'aceptado',
       });
 
-      fetchSolicitudes();
+      alert(`✅ Solicitud aprobada y correo enviado a ${email}`);
     } catch (error) {
-      console.error('Error al aceptar:', error);
+      console.error('Error al aprobar solicitud:', error);
+      alert('❌ Hubo un error al aprobar la solicitud.');
     }
   };
 
-  const rechazarSolicitud = async (id: string) => {
-    await updateDoc(doc(db, 'solicitudes-cuenta', id), { estado: 'rechazado' });
-    fetchSolicitudes();
-  };
-
-  useEffect(() => {
-    fetchSolicitudes();
-  }, []);
-
   return (
-    <div className={styles.container}>
-      <h1 className={styles.title}>Panel de Administración</h1>
-      {solicitudes.length === 0 ? (
-        <p>No hay solicitudes pendientes.</p>
-      ) : (
-        <ul className={styles.form}>
-          {solicitudes.map((s) => (
-            <li
-              key={s.id}
-              style={{
-                marginBottom: '20px',
-                paddingBottom: '15px',
-                borderBottom: '1px solid #ccc',
-              }}
-            >
-              <p>
-                <strong>Tienda:</strong> {s.tienda}
-              </p>
-              <p>
-                <strong>Email:</strong> {s.email}
-              </p>
-              <p>
-                <strong>Rol:</strong> {s.rol}
-              </p>
-              <button className={styles.button} onClick={() => aceptarSolicitud(s)}>
-                Aceptar
-              </button>{' '}
-              <button
-                className={styles.button}
-                style={{ backgroundColor: 'gray' }}
-                onClick={() => rechazarSolicitud(s.id)}
-              >
-                Rechazar
+    <div style={{ padding: '2rem' }}>
+      <h2>Solicitudes de Cuenta</h2>
+      <ul>
+        {solicitudes.map((s) => (
+          <li key={s.id} style={{ marginBottom: '1rem' }}>
+            <strong>{s.tienda}</strong> — {s.email} — {s.rol} — Estado: {s.estado}
+            {s.estado === 'pendiente' && (
+              <button onClick={() => aprobarSolicitud(s)} style={{ marginLeft: '1rem' }}>
+                Aprobar
               </button>
-            </li>
-          ))}
-        </ul>
-      )}
+            )}
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
+
+
+
