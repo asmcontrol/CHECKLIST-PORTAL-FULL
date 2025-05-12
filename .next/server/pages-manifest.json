@@ -2,9 +2,6 @@
   "/_app": "pages/_app.js",
   "/_error": "pages/_error.js",
   "/_document": "pages/_document.js",
-  "/solicitud-cuenta": "pages/solicitud-cuenta.js",
-  "/": "pages/index.js",
-  "/admin": "pages/admin.js",
-  "/login": "pages/login.js",
-  "/portal/[slug]": "pages/portal/[slug].js"
+  "/portal/[slug]": "pages/portal/[slug].js",
+  "/login": "pages/login.js"
 }

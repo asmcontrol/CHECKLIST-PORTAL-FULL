@@ -5,7 +5,10 @@ export default function LandingPage() {
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <img src="/asm-logo.png" alt="ASM Control" className={styles.logo} />
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '40px', marginBottom: '30px' }}>
+          <img src="/asm-logo.png" alt="ASM Control" style={{ maxHeight: '80px' }} />
+          <img src="/fashions_park_logo.jpeg" alt="Fashion's Park" style={{ maxHeight: '80px' }} />
+        </div>
       </div>
 
       <div className={styles.card}>
@@ -19,5 +22,6 @@ export default function LandingPage() {
     </div>
   );
 }
+
 
 

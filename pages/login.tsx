@@ -20,7 +20,7 @@ export default function LoginPage() {
 
     try {
       await signInWithEmailAndPassword(auth, email, pass);
-      router.push(`/portal/${tienda}?rol=${rol}`);
+      router.push(`/portal/${rol}?rol=${rol}&tienda=${tienda}`);
     } catch (err: any) {
       setError('Correo o contraseña incorrectos');
     }
@@ -69,6 +69,7 @@ export default function LoginPage() {
           <option value="tienda">Tienda</option>
           <option value="proveedor">Proveedor</option>
           <option value="auditor">Auditor</option>
+          <option value="admin">Administrador</option> {/* ✅ agregado */}
         </select>
 
         {error && <p style={styles.error}>{error}</p>}
@@ -140,5 +141,6 @@ const styles: Record<string, React.CSSProperties> = {
     textAlign: 'center',
   },
 };
+
 
 
