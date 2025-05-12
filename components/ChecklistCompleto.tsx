@@ -51,7 +51,8 @@ export default function ChecklistCompleto({ tienda, dataproveedor, datatienda }:
       </div>
 
       <div style={{ marginBottom: '40px' }}>
-        <AuditorView tienda={tienda} dataproveedor={dataproveedor} datatienda={datatienda} />
+        {/* ❗ Aquí eliminamos las props no utilizadas */}
+        <AuditorView tienda={tienda} />
       </div>
 
       <div style={{ marginBottom: '30px' }}>

@@ -13,7 +13,7 @@ export default function PortalSlug() {
 
   const [componente, setComponente] = useState<React.ReactNode>(null);
 
-  // Datos de ejemplo o reales (podrás reemplazarlos por los de Firebase)
+  // Datos de ejemplo o reales (puedes reemplazarlos por datos reales de Firebase)
   const mockProveedorData = {
     nombreTienda: 'Tienda Central',
     direccion: 'Av. Ejemplo 123',
@@ -48,13 +48,15 @@ export default function PortalSlug() {
         setComponente(<TiendaView tienda={String(tienda)} />);
         break;
       case 'auditor':
-        setComponente(
-          <AuditorView tienda={String(tienda)} dataproveedor={mockProveedorData} datatienda={mockTiendaData} />
-        );
+        setComponente(<AuditorView tienda={String(tienda)} />); // ✅ corregido
         break;
       case 'admin':
         setComponente(
-          <ChecklistCompleto tienda={String(tienda)} dataproveedor={mockProveedorData} datatienda={mockTiendaData} />
+          <ChecklistCompleto
+            tienda={String(tienda)}
+            dataproveedor={mockProveedorData}
+            datatienda={mockTiendaData}
+          />
         );
         break;
       default:
@@ -64,6 +66,7 @@ export default function PortalSlug() {
 
   return <>{componente}</>;
 }
+
 
 
 
