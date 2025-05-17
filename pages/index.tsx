@@ -1,27 +1,34 @@
-import Link from 'next/link';
-import styles from '../styles/landing.module.css';
+import { useRouter } from 'next/router';
 
-export default function LandingPage() {
+export default function Home() {
+  const router = useRouter();
+
   return (
-    <div className={styles.container}>
-      <div className={styles.header}>
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '40px', marginBottom: '30px' }}>
-          <img src="/asm-logo.png" alt="ASM Control" style={{ maxHeight: '80px' }} />
-          <img src="/fashions_park_logo.jpeg" alt="Fashion's Park" style={{ maxHeight: '80px' }} />
-        </div>
-      </div>
-
-      <div className={styles.card}>
-        <Link href="/login">
-          <button className={styles.buttonPrimary}>Mi Portal de Inventario</button>
-        </Link>
-        <Link href="/solicitud-cuenta">
-          <button className={styles.buttonSecondary}>Solicitud de Cuenta</button>
-        </Link>
-      </div>
+    <div style={{
+      height: '100vh',
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'center',
+      alignItems: 'center',
+      background: '#f5f5f5',
+      padding: '2rem'
+    }}>
+      <h1 style={{ color: '#333', marginBottom: '1rem' }}>Bienvenido al Portal de Inventario</h1>
+      <p style={{ color: '#666', marginBottom: '2rem', maxWidth: '400px', textAlign: 'center' }}>
+        Accede a tu checklist según tu rol y comienza a gestionar de forma rápida y segura.
+      </p>
+      <button onClick={() => router.push('/login')} style={{
+        padding: '12px 24px',
+        fontSize: '16px',
+        backgroundColor: '#007bff',
+        color: '#fff',
+        border: 'none',
+        borderRadius: '6px',
+        cursor: 'pointer',
+        fontWeight: 'bold'
+      }}>
+        Ir al Login
+      </button>
     </div>
   );
 }
-
-
-

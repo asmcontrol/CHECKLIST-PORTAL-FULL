@@ -1,146 +1,111 @@
+// pages/login.tsx
 import { useState } from 'react';
 import { useRouter } from 'next/router';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../firebase/firebaseConfig';
 
 export default function LoginPage() {
-  const [tienda, setTienda] = useState('');
-  const [email, setEmail] = useState('');
-  const [pass, setPass] = useState('');
-  const [rol, setRol] = useState('tienda');
-  const [error, setError] = useState('');
   const router = useRouter();
+  const [correo, setCorreo] = useState('');
+  const [clave, setClave] = useState('');
+  const [tienda, setTienda] = useState('');
+  const [rol, setRol] = useState<'jefe_tienda' | 'empresa_inventario' | 'auditor'>('jefe_tienda');
+  const [error, setError] = useState('');
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!tienda || !email || !pass || !rol) {
-      setError('Completa todos los campos');
-      return;
-    }
-
+  const handleLogin = async () => {
     try {
-      await signInWithEmailAndPassword(auth, email, pass);
-      router.push(`/portal/${rol}?rol=${rol}&tienda=${tienda}`);
-    } catch (err: any) {
-      setError('Correo o contraseña incorrectos');
+      await signInWithEmailAndPassword(auth, correo, clave);
+      router.push(`/portal/${tienda}?rol=${rol}`);
+    } catch (err) {
+      setError('Correo o contraseña incorrectos.');
     }
   };
 
   return (
-    <div style={styles.container}>
-      <form onSubmit={handleLogin} style={styles.card}>
-        <img src="/asm-logo.png" alt="Logo ASM" style={styles.logo} />
-        <h2 style={styles.title}>Inicio de Sesión</h2>
+    <div style={{
+      minHeight: '100vh',
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: '#f5f5f5',
+      padding: '2rem'
+    }}>
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '1rem',
+        marginBottom: '1rem'
+      }}>
+        <img src="/asm-logo.png" alt="ASM Logo" style={{ height: '60px', width: 'auto' }} />
+        <img src="/fashions_park_logo.png" alt="Fashions Park Logo" style={{ height: '60px', width: 'auto' }} />
+      </div>
 
-        <label style={styles.label}>Tienda:</label>
-        <input
-          type="text"
-          value={tienda}
-          onChange={(e) => setTienda(e.target.value)}
-          required
-          style={styles.input}
-        />
+      <h2 style={{ marginBottom: '1.5rem', color: '#333' }}>MI PORTAL DE INVENTARIO</h2>
 
-        <label style={styles.label}>Usuario:</label>
+      <div style={{
+        background: '#fff',
+        padding: '2rem',
+        borderRadius: '8px',
+        boxShadow: '0 0 10px rgba(0,0,0,0.1)',
+        width: '100%',
+        maxWidth: '400px'
+      }}>
         <input
           type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-          style={styles.input}
+          placeholder="Correo"
+          value={correo}
+          onChange={(e) => setCorreo(e.target.value)}
+          style={{ width: '100%', marginBottom: '12px', padding: '8px' }}
         />
 
-        <label style={styles.label}>Contraseña:</label>
         <input
           type="password"
-          value={pass}
-          onChange={(e) => setPass(e.target.value)}
-          required
-          style={styles.input}
+          placeholder="Contraseña"
+          value={clave}
+          onChange={(e) => setClave(e.target.value)}
+          style={{ width: '100%', marginBottom: '12px', padding: '8px' }}
         />
 
-        <label style={styles.label}>Rol:</label>
+        <input
+          placeholder="Código de Tienda"
+          value={tienda}
+          onChange={(e) => setTienda(e.target.value)}
+          style={{ width: '100%', marginBottom: '12px', padding: '8px' }}
+        />
+
         <select
           value={rol}
-          onChange={(e) => setRol(e.target.value)}
-          required
-          style={styles.input}
+          onChange={(e) => setRol(e.target.value as 'jefe_tienda' | 'empresa_inventario' | 'auditor')}
+          style={{ width: '100%', marginBottom: '16px', padding: '8px' }}
         >
-          <option value="tienda">Tienda</option>
-          <option value="proveedor">Proveedor</option>
+          <option value="jefe_tienda">Jefe de Tienda</option>
+          <option value="empresa_inventario">Empresa de Inventario</option>
           <option value="auditor">Auditor</option>
-          <option value="admin">Administrador</option> {/* ✅ agregado */}
         </select>
 
-        {error && <p style={styles.error}>{error}</p>}
-
-        <button type="submit" style={styles.button}>
+        <button onClick={handleLogin} style={{
+          width: '100%',
+          padding: '10px',
+          backgroundColor: '#007bff',
+          color: '#fff',
+          border: 'none',
+          borderRadius: '4px',
+          fontWeight: 'bold'
+        }}>
           Ingresar
         </button>
-      </form>
+
+        {error && <p style={{ color: 'red', marginTop: '10px' }}>{error}</p>}
+      </div>
     </div>
   );
 }
 
-const styles: Record<string, React.CSSProperties> = {
-  container: {
-    minHeight: '100vh',
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#f8f9fa',
-  },
-  card: {
-    backgroundColor: '#fff',
-    padding: '2rem',
-    borderRadius: '10px',
-    width: '100%',
-    maxWidth: '450px',
-    boxShadow: '0 0 10px rgba(0,0,0,0.1)',
-  },
-  logo: {
-    display: 'block',
-    margin: '0 auto 1.5rem',
-    height: '60px',
-  },
-  title: {
-    textAlign: 'center',
-    fontSize: '1.5rem',
-    color: '#2563eb',
-    marginBottom: '1.5rem',
-  },
-  label: {
-    fontWeight: 'bold',
-    marginTop: '1rem',
-    display: 'block',
-    fontSize: '0.95rem',
-  },
-  input: {
-    width: '100%',
-    padding: '0.6rem',
-    marginTop: '0.3rem',
-    marginBottom: '1rem',
-    border: '1px solid #ccc',
-    borderRadius: '5px',
-    fontSize: '1rem',
-  },
-  button: {
-    width: '100%',
-    padding: '0.75rem',
-    backgroundColor: '#2563eb',
-    color: '#fff',
-    border: 'none',
-    borderRadius: '5px',
-    fontWeight: 'bold',
-    cursor: 'pointer',
-  },
-  error: {
-    color: 'red',
-    fontSize: '0.9rem',
-    marginBottom: '1rem',
-    textAlign: 'center',
-  },
-};
+
+
+
+
 
 
 
