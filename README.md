@@ -1,3 +1,3 @@
 # Checklist Portal
 
-Proyecto con login y checklist de control de inventario.
+Proyecto con login y checklist de control de inventario.# CHECKLIST-PORTAL-FULL
