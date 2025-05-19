@@ -3,7 +3,7 @@ const csv = require('csv-parser');
 const { initializeApp } = require('firebase/app');
 const { getFirestore, doc, setDoc } = require('firebase/firestore');
 
-// Tu configuración de Firebase
+// Configuración de Firebase
 const firebaseConfig = {
   apiKey: "AIzaSyD20X_UNGxA6aqjAPoYdkdiDHyC-Z8zy_c",
   authDomain: "checklist-asmcontrol.firebaseapp.com",
@@ -18,11 +18,11 @@ const db = getFirestore(app);
 
 let contador = 0;
 
-// Carga el CSV (con separador personalizado: punto y coma)
-fs.createReadStream('Tiendas.csv')
-  .pipe(csv({ separator: ';' })) // 👈 IMPORTANTE: separador corregido
+// Carga el CSV
+fs.createReadStream('Tiendas con rol .csv') // Ojo con el espacio antes del punto
+  .pipe(csv({ separator: ';' }))
   .on('data', async (row) => {
-    console.log('🟡 Leyendo fila:', row); // Mostrar la fila leída
+    console.log('🟡 Leyendo fila:', row);
 
     try {
       const codigoTienda = row['CODIGO TIENDA'];
@@ -41,6 +41,7 @@ fs.createReadStream('Tiendas.csv')
           'JEFE ZONAL': row['JEFE_ZONAL'] || '',
           UBICACION: row['UBICACION'] || '',
           CORREO: row['CORREO'] || '',
+          ROL: row['ROL'] || '', // ✅ CAMPO NUEVO
         },
         visitaPrevia: {},
         checklist: {},
@@ -53,7 +54,7 @@ fs.createReadStream('Tiendas.csv')
       console.log(`✅ Cargado: ${codigoTienda}`);
       contador++;
     } catch (error) {
-      console.error(`❌ Error en fila con código ${row['CODIGO TIENDA']}:`, error);
+      console.error(`❌ Error en fila con código ${codigoTienda}:`, error);
     }
   })
   .on('end', () => {
@@ -62,3 +63,4 @@ fs.createReadStream('Tiendas.csv')
   .on('error', (error) => {
     console.error('❌ Error leyendo el archivo CSV:', error);
   });
+
