@@ -13,6 +13,18 @@ export default function Home() {
       background: '#f5f5f5',
       padding: '2rem'
     }}>
+      {/* Logos centrados */}
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        gap: '2rem',
+        marginBottom: '1.5rem'
+      }}>
+        <img src="/asm-logo.png" alt="ASM Logo" style={{ height: '60px', objectFit: 'contain' }} />
+        <img src="/fashions_park_logo.png" alt="Fashions Park Logo" style={{ height: '60px', objectFit: 'contain' }} />
+      </div>
+
       <h1 style={{ color: '#333', marginBottom: '1rem' }}>Bienvenido al Portal de Inventario</h1>
       <p style={{ color: '#666', marginBottom: '2rem', maxWidth: '400px', textAlign: 'center' }}>
         Accede a tu checklist según tu rol y comienza a gestionar de forma rápida y segura.
@@ -32,3 +44,4 @@ export default function Home() {
     </div>
   );
 }
+

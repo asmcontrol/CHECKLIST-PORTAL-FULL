@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import jsPDF from 'jspdf';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { doc, updateDoc } from 'firebase/firestore';
+import { doc, updateDoc, getDoc } from 'firebase/firestore';
 import { db } from '@/firebase/firebaseConfig';
 
 type Props = {
@@ -24,7 +24,28 @@ export default function CartaStep({ tienda, rol }: Props) {
   const [mensaje, setMensaje] = useState('');
   const [archivoFirmado, setArchivoFirmado] = useState<File | null>(null);
   const [subiendo, setSubiendo] = useState(false);
+  const [urlCarta, setUrlCarta] = useState<string>('');
   const storage = getStorage();
+
+  useEffect(() => {
+    const cargarCartaExistente = async () => {
+      try {
+        const docRef = doc(db, 'checklists', tienda);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          if (data.cartaAceptacionFirmadaURL) {
+            setUrlCarta(data.cartaAceptacionFirmadaURL);
+            setMensaje('✅ Ya hay una carta firmada guardada.');
+          }
+        }
+      } catch (error) {
+        console.error('Error al cargar carta existente:', error);
+      }
+    };
+
+    cargarCartaExistente();
+  }, [tienda]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -35,10 +56,9 @@ export default function CartaStep({ tienda, rol }: Props) {
     const pageWidth = docPdf.internal.pageSize.getWidth();
     const margin = 20;
 
-    // Logos a la derecha (asegúrate de tener las imágenes en public/ o usar base64)
     const logo1 = new Image();
     const logo2 = new Image();
-    logo1.src = '/logo1.png'; // Ajusta según tus rutas
+    logo1.src = '/logo1.png';
     logo2.src = '/logo2.png';
 
     logo1.onload = () => {
@@ -46,15 +66,12 @@ export default function CartaStep({ tienda, rol }: Props) {
         docPdf.addImage(logo1, 'PNG', pageWidth - 60, 10, 20, 10);
         docPdf.addImage(logo2, 'PNG', pageWidth - 35, 10, 20, 10);
 
-        // Título
         docPdf.setFontSize(14);
         docPdf.text('Carta de Aceptación de Inventario', pageWidth / 2, 30, { align: 'center' });
 
-        // Subtítulo
         docPdf.setFontSize(11);
         docPdf.text(`${form.ciudad}, ${form.estado}, ${form.codigoPostal}`, pageWidth / 2, 38, { align: 'center' });
 
-        // Texto
         const texto = `
 Estimado/a ${form.nombreEmpleado}:
 
@@ -72,7 +89,6 @@ Atentamente,`;
         docPdf.setFontSize(11);
         docPdf.text(lines, margin, 50);
 
-        // Firma centrada
         const firmaY = 160;
         docPdf.line(pageWidth / 2 - 40, firmaY, pageWidth / 2 + 40, firmaY);
         docPdf.text(form.nombreSupervisor, pageWidth / 2, firmaY + 8, { align: 'center' });
@@ -96,6 +112,7 @@ Atentamente,`;
         cartaAceptacionFirmadaURL: url,
       });
       setMensaje('✅ Carta firmada subida correctamente.');
+      setUrlCarta(url);
     } catch (error) {
       console.error(error);
       setMensaje('❌ Error al subir la carta firmada.');
@@ -109,7 +126,7 @@ Atentamente,`;
       <h3>📄 Generar Carta de Aceptación</h3>
       <p>Completa los siguientes campos:</p>
 
-      {[
+      {[ 
         { label: 'Ciudad', name: 'ciudad' },
         { label: 'Estado', name: 'estado' },
         { label: 'Código Postal', name: 'codigoPostal' },
@@ -184,10 +201,23 @@ Atentamente,`;
             {mensaje}
           </p>
         )}
+
+        {urlCarta && (
+          <a
+            href={urlCarta}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ display: 'block', marginTop: '10px', color: 'blue' }}
+          >
+            🔗 Ver carta firmada
+          </a>
+        )}
       </div>
     </div>
   );
 }
+
+
 
 
 

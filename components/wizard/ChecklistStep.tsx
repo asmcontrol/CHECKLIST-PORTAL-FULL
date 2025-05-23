@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { db } from '@/firebase/firebaseConfig';
-import { doc, setDoc, Timestamp } from 'firebase/firestore';
+import { doc, getDoc, setDoc, Timestamp } from 'firebase/firestore';
 
 const tiendaCampos = [
   'CÓDIGO DE TIENDA', 'TIENDA', 'EMPRESA', 'JEFE ZONAL', 'TIPO',
@@ -29,12 +29,12 @@ const checklistPreguntas = [
   '¿Es necesaria segunda visita?'
 ];
 
-const inventarioCampos = [
-  'Observación general del estado de la tienda',
-  'Comentarios sobre el apoyo del personal interno',
-  'Problemas detectados durante la visita',
-  'Recomendaciones para el equipo de inventario',
-  'Observación adicional del auditor (si aplica)'
+const inventarioCampos: string[] = [
+  'HORARIO DE LLEGADA BODEGA', 'HORARIO INICIO BODEGA', 'HORARIO DE LLEGADA SALA',
+  'HORARIO DE ZONIFICACIÍÓN DE SALA', 'HORARIO INICIO SALA', 'DOTACION BODEGA',
+  'DOTACIÓN SALA DE VENTAS', 'SUPERVISORES', 'ORPERADOR DE SISTEMAS',
+  'DOTACION DE TIENDA', 'CUMPLE LOS ESTANDARES PARA LA TOMA DE INVENTARIO',
+  'Observaciones generales del inventario'
 ];
 
 const verificacionFinalPreguntas = [
@@ -70,8 +70,55 @@ type Props = {
 export default function ChecklistStep({ tienda, rol }: Props) {
   const [form, setForm] = useState<Record<string, string | boolean>>({});
 
+  useEffect(() => {
+    const cargarDatos = async () => {
+      try {
+        const docRef = doc(db, 'checklists', tienda);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          const camposBase = {};
+          tiendaCampos.slice(0, 7).forEach(campo => {
+            if (data.tiendaInfo && data.tiendaInfo[campo]) {
+              camposBase[campo] = data.tiendaInfo[campo];
+            }
+          });
+          setForm(prev => ({ ...camposBase, ...data, ...prev }));
+        }
+      } catch (error) {
+        console.error('Error cargando datos previos:', error);
+      }
+    };
+
+    cargarDatos();
+  }, [tienda]);
+
+  const puedeEditar = (campo: string): boolean => {
+    if (rol === 'auditor') return false;
+    if (rol === 'empresa_inventario') {
+      return visitaCampos.includes(campo) || checklistPreguntas.includes(campo);
+    }
+    if (rol === 'jefe_tienda') {
+      return tiendaCampos.includes(campo) || inventarioCampos.includes(campo);
+    }
+    return true;
+  };
+
   const handleInput = (campo: string, valor: string | boolean) => {
-    setForm(prev => ({ ...prev, [campo]: valor }));
+    if (!puedeEditar(campo)) return;
+
+    const nuevoForm = { ...form, [campo]: valor };
+    setForm(nuevoForm);
+
+    const guardarProgreso = async () => {
+      try {
+        await setDoc(doc(db, 'checklists', tienda), nuevoForm, { merge: true });
+      } catch (error) {
+        console.error('Error guardando automáticamente:', error);
+      }
+    };
+
+    guardarProgreso();
   };
 
   const renderPreguntasConOpciones = (preguntas: string[]) => (
@@ -93,6 +140,7 @@ export default function ChecklistStep({ tienda, rol }: Props) {
                 name={pregunta}
                 checked={form[pregunta] === true}
                 onChange={() => handleInput(pregunta, true)}
+                disabled={!puedeEditar(pregunta)}
               />
             </td>
             <td style={{ textAlign: 'center' }}>
@@ -101,6 +149,7 @@ export default function ChecklistStep({ tienda, rol }: Props) {
                 name={pregunta}
                 checked={form[pregunta] === false}
                 onChange={() => handleInput(pregunta, false)}
+                disabled={!puedeEditar(pregunta)}
               />
             </td>
           </tr>
@@ -112,11 +161,9 @@ export default function ChecklistStep({ tienda, rol }: Props) {
   const guardarEnFirebase = async () => {
     try {
       await setDoc(doc(db, 'checklists', tienda), {
-        tienda,
-        rol,
         ...form,
         guardadoEn: Timestamp.now(),
-      });
+      }, { merge: true });
       alert('✅ Datos guardados correctamente');
     } catch (e) {
       console.error('Error guardando:', e);
@@ -124,50 +171,56 @@ export default function ChecklistStep({ tienda, rol }: Props) {
     }
   };
 
+  const renderInput = (campo: string) => (
+    <div key={campo} style={{ marginBottom: '10px' }}>
+      <label>{campo}</label><br />
+      <input
+        type="text"
+        value={(form[campo] as string) || ''}
+        onChange={(e) => handleInput(campo, e.target.value)}
+        disabled={!puedeEditar(campo)}
+        style={{
+          width: '100%',
+          padding: '8px',
+          borderRadius: '4px',
+          border: '1px solid #ccc',
+          backgroundColor: puedeEditar(campo) ? '#fff' : '#eee',
+          color: '#222'
+        }}
+      />
+    </div>
+  );
+
+  const renderTextarea = (campo: string) => (
+    <div key={campo} style={{ marginBottom: '10px' }}>
+      <label>{campo}</label><br />
+      <textarea
+        value={(form[campo] as string) || ''}
+        onChange={(e) => handleInput(campo, e.target.value)}
+        disabled={!puedeEditar(campo)}
+        style={{
+          width: '100%',
+          minHeight: '60px',
+          padding: '8px',
+          borderRadius: '4px',
+          border: '1px solid #ccc',
+          backgroundColor: puedeEditar(campo) ? '#fff' : '#eee',
+          color: '#222'
+        }}
+      />
+    </div>
+  );
+
   return (
     <div style={{ color: '#222' }}>
       <section>
         <h3 style={{ marginTop: '20px' }}>🛍️ Datos de Tienda</h3>
-        {tiendaCampos.map((campo) => (
-          <div key={campo} style={{ marginBottom: '10px' }}>
-            <label>{campo}</label><br />
-            <input
-              type="text"
-              value={(form[campo] as string) || ''}
-              onChange={(e) => handleInput(campo, e.target.value)}
-              style={{
-                width: '100%',
-                padding: '8px',
-                borderRadius: '4px',
-                border: '1px solid #ccc',
-                backgroundColor: '#fff',
-                color: '#222'
-              }}
-            />
-          </div>
-        ))}
+        {tiendaCampos.map(renderInput)}
       </section>
 
       <section>
         <h3 style={{ marginTop: '20px' }}>📋 Visita Previa</h3>
-        {visitaCampos.map((campo) => (
-          <div key={campo} style={{ marginBottom: '10px' }}>
-            <label>{campo}</label><br />
-            <input
-              type="text"
-              value={(form[campo] as string) || ''}
-              onChange={(e) => handleInput(campo, e.target.value)}
-              style={{
-                width: '100%',
-                padding: '8px',
-                borderRadius: '4px',
-                border: '1px solid #ccc',
-                backgroundColor: '#fff',
-                color: '#222'
-              }}
-            />
-          </div>
-        ))}
+        {visitaCampos.map(renderInput)}
       </section>
 
       <section>
@@ -177,24 +230,7 @@ export default function ChecklistStep({ tienda, rol }: Props) {
 
       <section>
         <h3 style={{ marginTop: '20px' }}>📝 Observaciones de Inventario</h3>
-        {inventarioCampos.map((campo) => (
-          <div key={campo} style={{ marginBottom: '10px' }}>
-            <label>{campo}</label><br />
-            <textarea
-              value={(form[campo] as string) || ''}
-              onChange={(e) => handleInput(campo, e.target.value)}
-              style={{
-                width: '100%',
-                minHeight: '60px',
-                padding: '8px',
-                borderRadius: '4px',
-                border: '1px solid #ccc',
-                backgroundColor: '#fff',
-                color: '#222'
-              }}
-            />
-          </div>
-        ))}
+        {inventarioCampos.map(renderTextarea)}
       </section>
 
       <section>
@@ -221,6 +257,11 @@ export default function ChecklistStep({ tienda, rol }: Props) {
     </div>
   );
 }
+
+
+
+
+
 
 
 

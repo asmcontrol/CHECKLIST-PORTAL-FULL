@@ -1,4 +1,3 @@
-// pages/login.tsx
 import { useState } from 'react';
 import { useRouter } from 'next/router';
 import { signInWithEmailAndPassword } from 'firebase/auth';
@@ -31,14 +30,22 @@ export default function LoginPage() {
       backgroundColor: '#f5f5f5',
       padding: '2rem'
     }}>
+      
+      {/* Logos superior */}
       <div style={{
         display: 'flex',
+        justifyContent: 'space-between',
         alignItems: 'center',
-        gap: '1rem',
-        marginBottom: '1rem'
+        width: '100%',
+        maxWidth: '800px',
+        marginBottom: '1rem',
+        padding: '0 2rem'
       }}>
-        <img src="/asm-logo.png" alt="ASM Logo" style={{ height: '60px', width: 'auto' }} />
-        <img src="/fashions_park_logo.png" alt="Fashions Park Logo" style={{ height: '60px', width: 'auto' }} />
+        <div style={{ flex: 1 }} />
+        <div style={{ display: 'flex', gap: '1rem' }}>
+          <img src="/asm-logo.png" alt="ASM Logo" style={{ height: '50px', objectFit: 'contain' }} />
+          <img src="/fashions_park_logo.png" alt="Fashion Park Logo" style={{ height: '50px', objectFit: 'contain' }} />
+        </div>
       </div>
 
       <h2 style={{ marginBottom: '1.5rem', color: '#333' }}>MI PORTAL DE INVENTARIO</h2>
@@ -101,6 +108,7 @@ export default function LoginPage() {
     </div>
   );
 }
+
 
 
 

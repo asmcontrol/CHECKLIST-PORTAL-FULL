@@ -1,130 +1,151 @@
-import { useState } from 'react';
-import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { doc, updateDoc, arrayUnion } from 'firebase/firestore';
-import { db } from '@/firebase/firebaseConfig'; // Ajusta si no usas alias
+'use client';
+
+import { useEffect, useState } from 'react';
+import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
+import { db, storage } from '@/firebase/firebaseConfig';
+import {
+  addDoc,
+  collection,
+  getDocs,
+  orderBy,
+  query,
+  Timestamp,
+  where
+} from 'firebase/firestore';
 
 type Props = {
   tienda: string;
   rol: 'jefe_tienda' | 'empresa_inventario' | 'auditor';
 };
 
-export default function FotosStep({ tienda, rol }: Props) {
-  const [archivos, setArchivos] = useState<File[]>([]);
-  const [previewURLs, setPreviewURLs] = useState<string[]>([]);
-  const [mensaje, setMensaje] = useState('');
-  const [subiendo, setSubiendo] = useState(false);
+interface FotoGuardada {
+  id: string;
+  url: string;
+  nombreArchivo: string;
+  timestamp: Timestamp;
+  rol: string;
+}
 
-  const storage = getStorage();
+export default function FotosStep({ tienda, rol }: Props) {
+  const [imagenes, setImagenes] = useState<File[]>([]);
+  const [galeria, setGaleria] = useState<FotoGuardada[]>([]);
+  const [subiendo, setSubiendo] = useState(false);
+  const [mensaje, setMensaje] = useState('');
+
+  // Cargar fotos ya guardadas
+  useEffect(() => {
+    const cargarFotos = async () => {
+      try {
+        const fotosRef = collection(db, 'evidencias_fotos');
+        const q = query(fotosRef, where('tienda', '==', tienda), orderBy('timestamp', 'desc'));
+        const snapshot = await getDocs(q);
+
+        const fotos: FotoGuardada[] = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...(doc.data() as Omit<FotoGuardada, 'id'>)
+        }));
+
+        setGaleria(fotos);
+      } catch (error) {
+        console.error('Error al cargar las fotos:', error);
+      }
+    };
+
+    cargarFotos();
+  }, [tienda]);
 
   const handleSeleccion = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files ? Array.from(e.target.files).slice(0, 20) : [];
-    setArchivos(files);
-    setPreviewURLs(files.map(file => URL.createObjectURL(file)));
+    const files = e.target.files ? Array.from(e.target.files).slice(0, 10) : [];
+    setImagenes(files);
     setMensaje('');
   };
 
   const handleSubida = async () => {
-    if (archivos.length === 0) {
-      setMensaje('❌ No hay imágenes seleccionadas para subir.');
+    if (imagenes.length === 0) {
+      setMensaje('Selecciona al menos una imagen.');
       return;
     }
 
-    setMensaje('⏳ Subiendo imágenes...');
     setSubiendo(true);
+    setMensaje('Subiendo imágenes...');
 
     try {
-      const urls: string[] = [];
-
-      for (const file of archivos) {
-        const nombre = `${Date.now()}_${file.name}`;
-        const storageRef = ref(storage, `fotos_checklist/${tienda}/${nombre}`);
+      for (const file of imagenes) {
+        const storageRef = ref(storage, `evidencias/${tienda}/${Date.now()}-${file.name}`);
         await uploadBytes(storageRef, file);
         const url = await getDownloadURL(storageRef);
-        urls.push(url);
 
-        // Guardar en Firestore
-        await updateDoc(doc(db, 'checklists', tienda), {
-          fotos: arrayUnion(url)
+        await addDoc(collection(db, 'evidencias_fotos'), {
+          tienda,
+          rol,
+          url,
+          nombreArchivo: file.name,
+          timestamp: Timestamp.now()
         });
       }
 
-      setArchivos([]);
-      setPreviewURLs([]);
-      setMensaje('✅ Imágenes subidas y guardadas exitosamente.');
-    } catch (e) {
-      console.error('Error subiendo imágenes:', e);
-      setMensaje('❌ Error al subir imágenes.');
-    } finally {
-      setSubiendo(false);
+      setMensaje('✅ Imágenes subidas con éxito.');
+      setImagenes([]);
+
+      const q = query(
+        collection(db, 'evidencias_fotos'),
+        where('tienda', '==', tienda),
+        orderBy('timestamp', 'desc')
+      );
+      const snapshot = await getDocs(q);
+      const nuevasFotos: FotoGuardada[] = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...(doc.data() as Omit<FotoGuardada, 'id'>)
+      }));
+      setGaleria(nuevasFotos);
+    } catch (error) {
+      console.error('❌ Error al subir imágenes:', error);
+      setMensaje('❌ Ocurrió un error al subir las imágenes.');
     }
+
+    setSubiendo(false);
   };
 
   return (
-    <div style={{ color: '#222' }}>
-      <h3>📸 Subida de Fotos (máx. 20)</h3>
-      <p style={{ fontSize: '0.95rem', color: '#555' }}>
-        <strong>Rol:</strong> {rol} &nbsp; | &nbsp; <strong>Tienda:</strong> {tienda}
-      </p>
+    <div style={{ padding: '1rem' }}>
+      <h2>📷 Fotos de Evidencia</h2>
 
-      <input
-        type="file"
-        accept="image/*"
-        multiple
-        onChange={handleSeleccion}
-        style={{
-          margin: '10px 0',
-          padding: '8px',
-          border: '1px solid #ccc',
-          borderRadius: '6px',
-          width: '100%',
-          backgroundColor: '#f9f9f9'
-        }}
-      />
-
-      <button
-        onClick={handleSubida}
-        disabled={subiendo}
-        style={{
-          padding: '10px 20px',
-          backgroundColor: '#1976d2',
-          color: '#fff',
-          border: 'none',
-          borderRadius: '6px',
-          cursor: subiendo ? 'not-allowed' : 'pointer',
-          marginTop: '10px'
-        }}
-      >
-        {subiendo ? 'Subiendo...' : 'Subir Imágenes'}
-      </button>
-
-      {mensaje && (
-        <p style={{ marginTop: '10px', color: mensaje.includes('❌') ? 'red' : 'green' }}>
-          {mensaje}
-        </p>
+      {(rol === 'jefe_tienda' || rol === 'empresa_inventario') && (
+        <>
+          <input type="file" accept="image/*" multiple onChange={handleSeleccion} />
+          <button onClick={handleSubida} disabled={subiendo}>
+            {subiendo ? 'Subiendo...' : 'Subir Imágenes'}
+          </button>
+        </>
       )}
 
-      {previewURLs.length > 0 && (
-        <div style={{ marginTop: '20px' }}>
-          <h4 style={{ marginBottom: '10px' }}>👁️ Vista Previa</h4>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
-            {previewURLs.map((src, i) => (
-              <img
-                key={`preview-${i}`}
-                src={src}
-                alt={`preview-${i}`}
-                style={{
-                  width: '90px',
-                  height: '90px',
-                  objectFit: 'cover',
-                  borderRadius: '6px',
-                  border: '1px solid #ccc'
-                }}
-              />
-            ))}
+      <p>{mensaje}</p>
+
+      <h3>Galería</h3>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+        {galeria.map(foto => (
+          <div key={foto.id} style={{ textAlign: 'center' }}>
+            <img src={foto.url} alt={foto.nombreArchivo} width={100} />
+            <p style={{ fontSize: '0.75rem' }}>{foto.nombreArchivo}</p>
           </div>
-        </div>
-      )}
+        ))}
+      </div>
     </div>
   );
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

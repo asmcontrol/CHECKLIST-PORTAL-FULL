@@ -18,14 +18,14 @@ const db = getFirestore(app);
 
 let contador = 0;
 
-// Carga el CSV
-fs.createReadStream('Tiendas con rol .csv') // Ojo con el espacio antes del punto
+// ✅ Nombre correcto del archivo CSV
+fs.createReadStream('BASE-DE-TIENDAS-FINAL.csv') // sin espacios, renómbralo así
   .pipe(csv({ separator: ';' }))
   .on('data', async (row) => {
     console.log('🟡 Leyendo fila:', row);
 
     try {
-      const codigoTienda = row['CODIGO TIENDA'];
+      const codigoTienda = row['CODIGO TIENDA'] || row['CÓDIGO TIENDA'];
       if (!codigoTienda) {
         console.warn('⚠️ Fila sin CÓDIGO TIENDA. Saltando...');
         return;
@@ -34,14 +34,14 @@ fs.createReadStream('Tiendas con rol .csv') // Ojo con el espacio antes del punt
       const data = {
         tiendaInfo: {
           EMPRESA: row['EMPRESA'] || '',
-          'CÓDIGO DE TIENDA': row['CODIGO TIENDA'] || '',
+          'CÓDIGO DE TIENDA': codigoTienda,
           TIENDA: row['TIENDA'] || '',
           COMUNA: row['COMUNA'] || '',
           ZONA: row['ZONA'] || '',
           'JEFE ZONAL': row['JEFE_ZONAL'] || '',
           UBICACION: row['UBICACION'] || '',
           CORREO: row['CORREO'] || '',
-          ROL: row['ROL'] || '', // ✅ CAMPO NUEVO
+          ROL: row['ROL'] || '',
         },
         visitaPrevia: {},
         checklist: {},
@@ -54,7 +54,7 @@ fs.createReadStream('Tiendas con rol .csv') // Ojo con el espacio antes del punt
       console.log(`✅ Cargado: ${codigoTienda}`);
       contador++;
     } catch (error) {
-      console.error(`❌ Error en fila con código ${codigoTienda}:`, error);
+      console.error(`❌ Error en fila con código ${codigoTienda || 'desconocido'}:`, error);
     }
   })
   .on('end', () => {
@@ -63,4 +63,5 @@ fs.createReadStream('Tiendas con rol .csv') // Ojo con el espacio antes del punt
   .on('error', (error) => {
     console.error('❌ Error leyendo el archivo CSV:', error);
   });
+
 
