@@ -34,7 +34,6 @@ const inventarioCampos: string[] = [
   'HORARIO DE ZONIFICACIÍÓN DE SALA', 'HORARIO INICIO SALA', 'DOTACION BODEGA',
   'DOTACIÓN SALA DE VENTAS', 'SUPERVISORES', 'ORPERADOR DE SISTEMAS',
   'DOTACION DE TIENDA', 'CUMPLE LOS ESTANDARES PARA LA TOMA DE INVENTARIO',
-  'Observaciones generales del inventario'
 ];
 
 const verificacionFinalPreguntas = [
@@ -59,7 +58,6 @@ const verificacionFinalPreguntas = [
   '¿Se confirma la finalización del inventario y se firma el acta o informe correspondiente?',
   '¿Se coordina el retiro del equipo externo y se verifica que todo quede en orden?',
   '¿Empresa externa informa a Control de Existencias los resultados y envía archivos de inventario?',
-  '¿Generación de carta?'
 ];
 
 type Props = {
@@ -224,17 +222,17 @@ export default function ChecklistStep({ tienda, rol }: Props) {
       </section>
 
       <section>
-        <h3 style={{ marginTop: '20px' }}>✅ Checklist de Condiciones</h3>
+        <h3 style={{ marginTop: '20px' }}></h3>
         {renderPreguntasConOpciones(checklistPreguntas)}
       </section>
 
       <section>
-        <h3 style={{ marginTop: '20px' }}>📝 Observaciones de Inventario</h3>
+        <h3 style={{ marginTop: '20px' }}>Inventario</h3>
         {inventarioCampos.map(renderTextarea)}
       </section>
 
       <section>
-        <h3 style={{ marginTop: '20px' }}>🔍 Verificación Final</h3>
+        <h3 style={{ marginTop: '20px' }}></h3>
         {renderPreguntasConOpciones(verificacionFinalPreguntas)}
       </section>
 

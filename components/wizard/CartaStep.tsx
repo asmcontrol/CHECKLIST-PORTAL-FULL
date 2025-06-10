@@ -127,11 +127,9 @@ Atentamente,`;
       <p>Completa los siguientes campos:</p>
 
       {[ 
-        { label: 'Ciudad', name: 'ciudad' },
-        { label: 'Estado', name: 'estado' },
-        { label: 'Código Postal', name: 'codigoPostal' },
+        { label: 'Comuna', name: 'comuna' },
         { label: 'Nombre del Empleado', name: 'nombreEmpleado' },
-        { label: 'Nombre de la Tienda', name: 'nombreTienda' },
+        { label: 'Tienda', name: 'nombreTienda' },
         { label: 'Fecha del Inventario', name: 'fechaInventario' },
         { label: 'Nombre del Supervisor', name: 'nombreSupervisor' },
         { label: 'Título del Supervisor', name: 'tituloSupervisor' },
