@@ -12,6 +12,7 @@ import {
   Timestamp,
   where
 } from 'firebase/firestore';
+import { getAuth } from 'firebase/auth';
 
 type Props = {
   tienda: string;
@@ -32,7 +33,6 @@ export default function FotosStep({ tienda, rol }: Props) {
   const [subiendo, setSubiendo] = useState(false);
   const [mensaje, setMensaje] = useState('');
 
-  // Cargar fotos ya guardadas
   useEffect(() => {
     const cargarFotos = async () => {
       try {
@@ -66,12 +66,22 @@ export default function FotosStep({ tienda, rol }: Props) {
       return;
     }
 
+    const auth = getAuth();
+    const user = auth.currentUser;
+
+    if (!user) {
+      setMensaje('❌ Debes iniciar sesión para subir imágenes.');
+      return;
+    }
+
     setSubiendo(true);
     setMensaje('Subiendo imágenes...');
 
     try {
+      const tiendaSegura = tienda.replace(/[^a-zA-Z0-9_-]/g, '_');
+
       for (const file of imagenes) {
-        const storageRef = ref(storage, `evidencias/${tienda}/${Date.now()}-${file.name}`);
+        const storageRef = ref(storage, `evidencias/${tiendaSegura}/${Date.now()}-${file.name}`);
         await uploadBytes(storageRef, file);
         const url = await getDownloadURL(storageRef);
 
@@ -87,6 +97,7 @@ export default function FotosStep({ tienda, rol }: Props) {
       setMensaje('✅ Imágenes subidas con éxito.');
       setImagenes([]);
 
+      // Recargar galería
       const q = query(
         collection(db, 'evidencias_fotos'),
         where('tienda', '==', tienda),
@@ -98,9 +109,9 @@ export default function FotosStep({ tienda, rol }: Props) {
         ...(doc.data() as Omit<FotoGuardada, 'id'>)
       }));
       setGaleria(nuevasFotos);
-    } catch (error) {
-      console.error('❌ Error al subir imágenes:', error);
-      setMensaje('❌ Ocurrió un error al subir las imágenes.');
+    } catch (error: any) {
+      console.error('❌ Error al subir imágenes:', error.code || error.message || error);
+      setMensaje(`❌ Ocurrió un error al subir las imágenes: ${error.code || error.message}`);
     }
 
     setSubiendo(false);
@@ -133,6 +144,7 @@ export default function FotosStep({ tienda, rol }: Props) {
     </div>
   );
 }
+
 
 
 
