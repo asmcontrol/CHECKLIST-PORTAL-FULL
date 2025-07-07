@@ -1,3 +1,5 @@
+'use client';
+
 import { useState } from 'react';
 import { useRouter } from 'next/router';
 import { signInWithEmailAndPassword } from 'firebase/auth';
@@ -16,6 +18,7 @@ export default function LoginPage() {
       await signInWithEmailAndPassword(auth, correo, clave);
       router.push(`/portal/${tienda}?rol=${rol}`);
     } catch (err) {
+      console.error(err);
       setError('Correo o contraseña incorrectos.');
     }
   };
@@ -28,9 +31,30 @@ export default function LoginPage() {
       justifyContent: 'center',
       alignItems: 'center',
       backgroundColor: '#f5f5f5',
-      padding: '2rem'
+      padding: '2rem',
+      position: 'relative'
     }}>
-      
+      {/* 🔵 Botón fijo arriba a la derecha */}
+      <div style={{
+        position: 'absolute',
+        top: '1rem',
+        right: '1rem'
+      }}>
+        <button
+          onClick={() => router.push('/admin-login')}
+          style={{
+            backgroundColor: '#1e40af',
+            color: 'white',
+            padding: '0.5rem 1rem',
+            borderRadius: '8px',
+            border: 'none',
+            cursor: 'pointer'
+          }}
+        >
+          Portal Administrativo
+        </button>
+      </div>
+
       {/* Logos superior */}
       <div style={{
         display: 'flex',
@@ -108,6 +132,8 @@ export default function LoginPage() {
     </div>
   );
 }
+
+
 
 
 
