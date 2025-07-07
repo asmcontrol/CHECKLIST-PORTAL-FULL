@@ -1,10 +1,12 @@
 [
   {
-    "origin": ["*"],
+    "origin": ["https://checklist-portal-full-fxhp.vercel.app"],
     "method": ["GET", "POST", "PUT"],
-    "maxAgeSeconds": 3600
+    "maxAgeSeconds": 3600,
+    "responseHeader": ["Content-Type", "Authorization"]
   }
 ]
+
 
 
   
