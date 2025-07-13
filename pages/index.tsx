@@ -13,7 +13,6 @@ export default function Home() {
       background: '#f5f5f5',
       padding: '2rem'
     }}>
-      {/* Logos centrados */}
       <div style={{
         display: 'flex',
         justifyContent: 'center',
@@ -27,8 +26,10 @@ export default function Home() {
 
       <h1 style={{ color: '#333', marginBottom: '1rem' }}>Bienvenido al Portal de Inventario</h1>
       <p style={{ color: '#666', marginBottom: '2rem', maxWidth: '400px', textAlign: 'center' }}>
-        Accede a tu checklist según tu rol y comienza a gestionar de forma rápida y segura.
+        Accede al checklist, sube fotos y completa la carta de aceptación según tu rol.
+        Sistema diseñado para facilitar la toma de inventarios en tiendas Fashion’s Park.
       </p>
+
       <button onClick={() => router.push('/login')} style={{
         padding: '12px 24px',
         fontSize: '16px',
@@ -37,11 +38,27 @@ export default function Home() {
         border: 'none',
         borderRadius: '6px',
         cursor: 'pointer',
+        fontWeight: 'bold',
+        marginBottom: '1rem'
+      }}>
+        Iniciar Sesión
+      </button>
+
+      <button onClick={() => router.push('/portal/demo?rol=empresa_inventario')} style={{
+        padding: '12px 24px',
+        fontSize: '16px',
+        backgroundColor: '#28a745',
+        color: '#fff',
+        border: 'none',
+        borderRadius: '6px',
+        cursor: 'pointer',
         fontWeight: 'bold'
       }}>
-        Ir al Login
+        Ver Demo sin Login
       </button>
     </div>
   );
 }
+
+
 

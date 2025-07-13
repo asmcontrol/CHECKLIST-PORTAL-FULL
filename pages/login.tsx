@@ -1,137 +1,111 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/router';
+import { useRouter } from 'next/navigation';
 import { signInWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '../firebase/firebaseConfig';
+import { auth } from '@/firebase/firebaseConfig';
 
 export default function LoginPage() {
   const router = useRouter();
-  const [correo, setCorreo] = useState('');
-  const [clave, setClave] = useState('');
-  const [tienda, setTienda] = useState('');
-  const [rol, setRol] = useState<'jefe_tienda' | 'empresa_inventario' | 'auditor'>('jefe_tienda');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [rol, setRol] = useState('jefe_tienda');
   const [error, setError] = useState('');
 
   const handleLogin = async () => {
     try {
-      await signInWithEmailAndPassword(auth, correo, clave);
-      router.push(`/portal/${tienda}?rol=${rol}`);
-    } catch (err) {
+      await signInWithEmailAndPassword(auth, email, password);
+      router.push(`/portal/demo-tienda?rol=${rol}`);
+    } catch (err: any) {
+      setError('❌ Credenciales inválidas o error en la autenticación');
       console.error(err);
-      setError('Correo o contraseña incorrectos.');
     }
+  };
+
+  const entrarComoDemo = (rolDemo: string) => {
+    router.push(`/portal/demo-tienda?rol=${rolDemo}`);
   };
 
   return (
     <div style={{
-      minHeight: '100vh',
-      display: 'flex',
-      flexDirection: 'column',
-      justifyContent: 'center',
-      alignItems: 'center',
-      backgroundColor: '#f5f5f5',
+      maxWidth: '400px',
+      margin: '50px auto',
       padding: '2rem',
-      position: 'relative'
+      border: '1px solid #ccc',
+      borderRadius: '12px',
+      textAlign: 'center',
+      boxShadow: '0px 4px 12px rgba(0,0,0,0.1)'
     }}>
-      {/* 🔵 Botón fijo arriba a la derecha */}
-      <div style={{
-        position: 'absolute',
-        top: '1rem',
-        right: '1rem'
-      }}>
-        <button
-          onClick={() => router.push('/admin-login')}
-          style={{
-            backgroundColor: '#1e40af',
-            color: 'white',
-            padding: '0.5rem 1rem',
-            borderRadius: '8px',
-            border: 'none',
-            cursor: 'pointer'
-          }}
-        >
-          Portal Administrativo
-        </button>
-      </div>
+      <h2>🔐 Iniciar Sesión</h2>
 
-      {/* Logos superior */}
-      <div style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        width: '100%',
-        maxWidth: '800px',
-        marginBottom: '1rem',
-        padding: '0 2rem'
-      }}>
-        <div style={{ flex: 1 }} />
-        <div style={{ display: 'flex', gap: '1rem' }}>
-          <img src="/asm-logo.png" alt="ASM Logo" style={{ height: '50px', objectFit: 'contain' }} />
-          <img src="/fashions_park_logo.png" alt="Fashion Park Logo" style={{ height: '50px', objectFit: 'contain' }} />
-        </div>
-      </div>
+      <input
+        type="email"
+        placeholder="Correo electrónico"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        style={{ width: '100%', padding: '0.5rem', marginBottom: '10px' }}
+      />
+      <input
+        type="password"
+        placeholder="Contraseña"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        style={{ width: '100%', padding: '0.5rem', marginBottom: '10px' }}
+      />
 
-      <h2 style={{ marginBottom: '1.5rem', color: '#333' }}>MI PORTAL DE INVENTARIO</h2>
+      <select
+        value={rol}
+        onChange={(e) => setRol(e.target.value)}
+        style={{ width: '100%', padding: '0.5rem', marginBottom: '15px' }}
+      >
+        <option value="jefe_tienda">Jefe de Tienda</option>
+        <option value="empresa_inventario">Empresa Inventario</option>
+        <option value="auditor">Auditor</option>
+      </select>
 
-      <div style={{
-        background: '#fff',
-        padding: '2rem',
-        borderRadius: '8px',
-        boxShadow: '0 0 10px rgba(0,0,0,0.1)',
-        width: '100%',
-        maxWidth: '400px'
-      }}>
-        <input
-          type="email"
-          placeholder="Correo"
-          value={correo}
-          onChange={(e) => setCorreo(e.target.value)}
-          style={{ width: '100%', marginBottom: '12px', padding: '8px' }}
-        />
-
-        <input
-          type="password"
-          placeholder="Contraseña"
-          value={clave}
-          onChange={(e) => setClave(e.target.value)}
-          style={{ width: '100%', marginBottom: '12px', padding: '8px' }}
-        />
-
-        <input
-          placeholder="Código de Tienda"
-          value={tienda}
-          onChange={(e) => setTienda(e.target.value)}
-          style={{ width: '100%', marginBottom: '12px', padding: '8px' }}
-        />
-
-        <select
-          value={rol}
-          onChange={(e) => setRol(e.target.value as 'jefe_tienda' | 'empresa_inventario' | 'auditor')}
-          style={{ width: '100%', marginBottom: '16px', padding: '8px' }}
-        >
-          <option value="jefe_tienda">Jefe de Tienda</option>
-          <option value="empresa_inventario">Empresa de Inventario</option>
-          <option value="auditor">Auditor</option>
-        </select>
-
-        <button onClick={handleLogin} style={{
+      <button
+        onClick={handleLogin}
+        style={{
           width: '100%',
-          padding: '10px',
-          backgroundColor: '#007bff',
-          color: '#fff',
+          padding: '0.6rem',
+          backgroundColor: '#1976d2',
+          color: 'white',
           border: 'none',
-          borderRadius: '4px',
+          borderRadius: '6px',
+          cursor: 'pointer',
           fontWeight: 'bold'
-        }}>
-          Ingresar
-        </button>
+        }}
+      >
+        Iniciar sesión
+      </button>
 
-        {error && <p style={{ color: 'red', marginTop: '10px' }}>{error}</p>}
-      </div>
+      {error && <p style={{ color: 'red', marginTop: '10px' }}>{error}</p>}
+
+      <hr style={{ margin: '20px 0' }} />
+
+      <h3>🚀 Acceso Rápido DEMO</h3>
+      <button onClick={() => entrarComoDemo('jefe_tienda')} style={demoBtn}>Entrar como Jefe de Tienda</button>
+      <button onClick={() => entrarComoDemo('empresa_inventario')} style={demoBtn}>Entrar como Empresa Inventario</button>
+      <button onClick={() => entrarComoDemo('auditor')} style={demoBtn}>Entrar como Auditor</button>
     </div>
   );
 }
+
+const demoBtn = {
+  width: '100%',
+  padding: '0.6rem',
+  margin: '5px 0',
+  backgroundColor: '#4caf50',
+  color: 'white',
+  border: 'none',
+  borderRadius: '6px',
+  cursor: 'pointer',
+  fontWeight: 'bold' as const
+};
+
+
+
+
 
 
 

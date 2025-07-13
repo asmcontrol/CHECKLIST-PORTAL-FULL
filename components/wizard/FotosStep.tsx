@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
-import { db, storage, auth } from '@/firebase/firebaseConfig';
+import { db, storage } from '@/firebase/firebaseConfig';
 import {
   addDoc,
   collection,
@@ -12,7 +12,6 @@ import {
   Timestamp,
   where
 } from 'firebase/firestore';
-import { onAuthStateChanged } from 'firebase/auth';
 
 type Props = {
   tienda: string;
@@ -32,30 +31,17 @@ export default function FotosStep({ tienda, rol }: Props) {
   const [galeria, setGaleria] = useState<FotoGuardada[]>([]);
   const [subiendo, setSubiendo] = useState(false);
   const [mensaje, setMensaje] = useState('');
-  const [usuario, setUsuario] = useState<any>(null);
 
-  // 🔐 Observar sesión activa
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setUsuario(user);
-    });
-
-    return () => unsubscribe();
-  }, []);
-
-  // 🔁 Cargar galería
   useEffect(() => {
     const cargarFotos = async () => {
       try {
         const fotosRef = collection(db, 'evidencias_fotos');
         const q = query(fotosRef, where('tienda', '==', tienda), orderBy('timestamp', 'desc'));
         const snapshot = await getDocs(q);
-
         const fotos: FotoGuardada[] = snapshot.docs.map(doc => ({
           id: doc.id,
           ...(doc.data() as Omit<FotoGuardada, 'id'>)
         }));
-
         setGaleria(fotos);
       } catch (error) {
         console.error('Error al cargar las fotos:', error);
@@ -65,22 +51,15 @@ export default function FotosStep({ tienda, rol }: Props) {
     cargarFotos();
   }, [tienda]);
 
-  // 📥 Selección de imágenes
   const handleSeleccion = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files ? Array.from(e.target.files).slice(0, 10) : [];
     setImagenes(files);
     setMensaje('');
   };
 
-  // 🔼 Subir imágenes
   const handleSubida = async () => {
     if (imagenes.length === 0) {
       setMensaje('Selecciona al menos una imagen.');
-      return;
-    }
-
-    if (!usuario) {
-      setMensaje('❌ Debes iniciar sesión para subir imágenes.');
       return;
     }
 
@@ -94,7 +73,6 @@ export default function FotosStep({ tienda, rol }: Props) {
         const fecha = new Date();
         const timestampNombre = fecha.toISOString().replace(/[:.]/g, '-');
         const nombreLimpio = file.name.replace(/\s+/g, '_');
-
         const ruta = `evidencias/${tiendaCarpeta}/${timestampNombre}_${nombreLimpio}`;
         const storageRef = ref(storage, ruta);
 
@@ -113,7 +91,7 @@ export default function FotosStep({ tienda, rol }: Props) {
       setMensaje('✅ Imágenes subidas con éxito.');
       setImagenes([]);
 
-      // 🔁 Recargar galería
+      // Volver a cargar galería
       const snapshot = await getDocs(
         query(collection(db, 'evidencias_fotos'), where('tienda', '==', tienda), orderBy('timestamp', 'desc'))
       );
@@ -124,7 +102,7 @@ export default function FotosStep({ tienda, rol }: Props) {
       setGaleria(nuevasFotos);
     } catch (error: any) {
       console.error('❌ Error al subir imágenes:', error.code || error.message || error);
-      setMensaje(`❌ Ocurrió un error al subir las imágenes: ${error.code || error.message}`);
+      setMensaje(`❌ Error al subir: ${error.code || error.message}`);
     }
 
     setSubiendo(false);
@@ -157,23 +135,3 @@ export default function FotosStep({ tienda, rol }: Props) {
     </div>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
